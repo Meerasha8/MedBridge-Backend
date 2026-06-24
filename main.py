@@ -38,17 +38,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# NOTE: Starlette runs middlewares in REVERSE order of registration.
+# Execution order: CORS → Auth → route handler
+
+# Auth middleware (added first = runs second)
+app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
+
+# CORS middleware (added second = runs first, handles OPTIONS preflight before auth)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tighten for production
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Auth middleware (runs on every request except public routes)
-app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
 
 # Routers
 app.include_router(auth.router)

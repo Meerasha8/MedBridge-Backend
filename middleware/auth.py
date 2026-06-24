@@ -33,8 +33,12 @@ def is_public(method: str, path: str) -> bool:
 
 
 async def auth_middleware(request: Request, call_next):
+    method = request.method   # ← must be defined BEFORE using it
     path = request.url.path
-    method = request.method
+
+    # Always let OPTIONS through — these are CORS preflight requests
+    if method == "OPTIONS":
+        return await call_next(request)
 
     if is_public(method, path):
         return await call_next(request)
